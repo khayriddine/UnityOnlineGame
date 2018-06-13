@@ -1,5 +1,7 @@
 var http = require('http');
+var fs = require('fs');
 var app = require('express')();
+
 
 var clients = [];
 var spawnPosition = [[0,0,0],[20,0,10],[-20,0,10],[20,0,-10],[-20,0,-10]];
@@ -7,7 +9,10 @@ var server = http.Server(app);
 var index =0;
 
 app.get('/',function(req,res){
-	res.send('yolo');
+    fs.readFile('./index.html','utf-8',function(err,content){
+        res.writeHead(200,{ "content-type":"text/html" });
+        res.end(content);
+    });
 });
 var io = require('socket.io').listen(server);
 
@@ -29,4 +34,4 @@ io.on('connection',function(socket){
 });
 
 
-server.listen(3000);
+server.listen(process.env.PORT ||3000);
