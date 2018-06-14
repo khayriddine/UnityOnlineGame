@@ -18,18 +18,41 @@ var io = require('socket.io').listen(server);
 
 io.on('connection',function(socket){
 	var currentPlayer ={};
-	socket.on('new player',function(data){
-		currentPlayer = data;
-		//console.log(data);
-		socket.broadcast.emit('new player joined',data);
-		for(var i=0;i<clients.length;i++){
-			socket.emit('client already connected',clients[i]);
+	
+	socket.on('new player connect',function(){
+		for(var i =0; i<clients.length;i++) {
+			var playerAlreadyConnected = {
+				name:clients[i].name,
+				modelKey:clients[i].modelKey,
+				position:spawnPosition[i%5],
+				rotation:clients[i].rotation,
+				health:clients[i].health
+				
+			};
+			console.log(playerAlreadyConnected.name);
+			socket.emit('player already connected', playerAlreadyConnected);
+			
 		}
-		clients.push(data);
+	});
+	socket.on('new player play',function(data){
+		currentPlayer = data;
+		console.log(data.name);
+		socket.emit('play',currentPlayer);
+		clients.push(currentPlayer);
+		socket.broadcast.emit('new player joined',currentPlayer);
+		
 	});
 	socket.on('update transform',function(data){
-		//console.log(data);
 		socket.broadcast.emit('other player moved',data);
+	});
+	socket.on('disconnect', function() {
+		console.log(' player disconnect '+currentPlayer.name);
+		socket.broadcast.emit('other player disconnected', currentPlayer);
+		for(var i=0; i<clients.length; i++) {
+			if(clients[i].name === currentPlayer.name) {
+				clients.splice(i,1);
+			}
+		}
 	});
 });
 
